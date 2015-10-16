@@ -1,4 +1,4 @@
-rdb-fullstack
-=============
+## Swiss Tournament
+### Udacity FS Project 2
 
-Common code for the Relational Databases and Full Stack Fundamentals courses
+Install and usage directions to come
