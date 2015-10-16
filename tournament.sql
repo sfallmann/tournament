@@ -1,74 +1,39 @@
--- Table definitions for the tournament project.
---
--- Put your SQL 'create table' statements in this file; also 'create view'
--- statements if you choose to use it.
---
--- You can write comments in this file by starting them with two dashes, like
--- these lines here.
+-- Create the database
+CREATE DATABASE tournament;
 
-
-create table players (
-    id serial primary key,
+-- Create the Player table
+CREATE TABLE players (
+    player_id serial PRIMARY KEY,
     name text
 );
 
-create table matches (
-    id serial primary key,
-    player_one int references players(id),
-    player_two int references players(id)
+-- Create the Matches table
+CREATE TABLE matches (
+    match_id serial PRIMARY KEY,
+    winner_id int REFERENCES players(player_id),
+    loser_id int REFERENCES players(player_id)
 );
 
-create table winners (
-    match_id int references matches(id),
-    winner_id int references players(id),
-);
-
-CREATE VIEW match_summary AS
-SELECT matches.id AS match,
-player_one AS p1,
-player_two AS p2,
-winner_id AS winner
-FROM matches, winners
-WHERE winner_id = player_one
-OR winner_id = player_two;
-
-
-SELECT players.id, players.name,
-COUNT(matches.id) AS num_matches,
-COUNT(winner_id) AS wins
-FROM players
-LEFT JOIN match_summary
-ON players.id = player_one
-OR players.id = player_two;
-
-    """Records the outcome of a single match between two players.
-
-    Args:
-      winner:  the id number of the player who won
-      loser:  the id number of the player who lost
-    """
-
-SELECT match.id FROM matches WHERE (player_one = winner or player_two = winner)
-AND (player_one = loser or player_two = loser)
-
-
-INSERT INTO winners
-(match_id, winner_id) VALUES (%s)
-
-
-#################################
-
-create table matches (
-    match_id serial primary key,
-    winner_id int references players(id),
-    loser_id int references players(id)
-);
-
-CREATE VIEW participated AS
+-- Create the view Participated
+-- Returns the player_id of the participant in a match
+-- and the match_id of each match the participant played in
+CREATE OR REPLACE VIEW participated AS
 SELECT match_id AS match,
-players.id AS player,
-players.name AS name
+player_id AS participant
 FROM matches, players
-WHERE players.id = winner_id OR
-players.id = loser_id
-GROUP BY match_id, players.id;
+WHERE player_id IN (winner_id,loser_id)
+GROUP BY match_id, player_id;
+
+-- Create the view Player Summary
+-- Returns the player_id of the player, the total matches played in
+-- and the total wins
+CREATE OR REPLACE VIEW player_summary AS
+SELECT participant AS player,
+COUNT (match) AS total_matches,
+COUNT (winner_id) AS wins
+FROM participated
+LEFT JOIN matches
+ON participant = winner_id
+GROUP BY participant;
+
+
