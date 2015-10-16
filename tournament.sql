@@ -56,3 +56,19 @@ INSERT INTO winners
 (match_id, winner_id) VALUES (%s)
 
 
+#################################
+
+create table matches (
+    match_id serial primary key,
+    winner_id int references players(id),
+    loser_id int references players(id)
+);
+
+CREATE VIEW participated AS
+SELECT match_id AS match,
+players.id AS player,
+players.name AS name
+FROM matches, players
+WHERE players.id = winner_id OR
+players.id = loser_id
+GROUP BY match_id, players.id;

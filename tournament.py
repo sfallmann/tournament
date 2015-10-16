@@ -69,12 +69,12 @@ def playerStandings():
     c = db.cursor()
     c.execute('''
                 SELECT players.id, players.name,
-                COUNT(match) AS num_matches,
-                COUNT(winner) AS wins
+                COUNT(match_id) AS num_matches,
+                COUNT(winner_id) AS wins
                 FROM players
-                LEFT JOIN match_summary
-                ON players.id = p1
-                OR players.id = p2
+                LEFT JOIN matches
+                ON players.id = winner_id
+                OR players.id = loser_id
                 GROUP BY players.id;
               ''')
     players = c.fetchall()
@@ -94,16 +94,10 @@ def reportMatch(winner, loser):
     db = connect()
     c = db.cursor()
     c.execute('''
-                SELECT matches.id
-                FROM matches
-                WHERE (player_one = %s or player_two = %s)
-                AND (player_one = %s or player_two = %s);
-              ''', (winner,winner,loser,loser))
-    match = c.fetchone()
-    c.execute('''
-                INSERT INTO winners
+                INSERT INTO matches
+                (winner_id, loser_id)
                 VALUES (%s, %s)
-              ''',(match, winner))
+              ''',(winner, loser))
     db.commit()
     db.close()
 
